@@ -1,0 +1,10 @@
+{
+  "auth_type": "oauth",
+  "client_id": "mock_client_id_12345",
+  "client_secret": "mock_client_secret_67890",
+  "refresh_token": "next_refresh_token_abc123",
+  "rotate_refresh_token": true,
+  "next_refresh_token": "next_refresh_token_abc123",
+  "access_token": "mock_access_token_abcdef",
+  "api_key": "mock_api_key_xyz789"
+}

@@ -51,6 +51,23 @@ class MockTap:
         if self.auth_type == "api_key":
             if "api_key" not in self.config:
                 raise ValueError("API key config missing required key: 'api_key'")
+        
+        # Validate records_qty if provided
+        if "records_qty" in self.config:
+            records_qty = self.config["records_qty"]
+            if not isinstance(records_qty, int) or records_qty < 0:
+                raise ValueError("records_qty must be a non-negative integer")
+        
+        # Validate base_date if provided
+        if "base_date" in self.config:
+            base_date = self.config["base_date"]
+            if not isinstance(base_date, str):
+                raise ValueError("base_date must be a string in ISO format")
+            try:
+                # Try to parse the ISO format datetime
+                datetime.fromisoformat(base_date.replace('Z', '+00:00'))
+            except ValueError:
+                raise ValueError("base_date must be a valid datetime in ISO format")
     
     def _authenticate(self):
         """Simulate authentication based on auth_type."""
@@ -123,7 +140,15 @@ class MockTap:
         if state:
             bookmark_value = get_bookmark(state, "customers", "last_updated")
         
-        base_date = datetime.now(timezone.utc)
+        # Use base_date from config if provided, otherwise use current time
+        if "base_date" in self.config:
+            base_date_str = self.config["base_date"]
+            # Handle 'Z' suffix for UTC timezone
+            if base_date_str.endswith('Z'):
+                base_date_str = base_date_str.replace('Z', '+00:00')
+            base_date = datetime.fromisoformat(base_date_str)
+        else:
+            base_date = datetime.now(timezone.utc)
         
         if bookmark_value:
             # Incremental sync: 5 updates + 5 new customers
@@ -205,7 +230,15 @@ class MockTap:
         if state:
             bookmark_value = get_bookmark(state, "opportunities", "last_updated")
         
-        base_date = datetime.now(timezone.utc)
+        # Use base_date from config if provided, otherwise use current time
+        if "base_date" in self.config:
+            base_date_str = self.config["base_date"]
+            # Handle 'Z' suffix for UTC timezone
+            if base_date_str.endswith('Z'):
+                base_date_str = base_date_str.replace('Z', '+00:00')
+            base_date = datetime.fromisoformat(base_date_str)
+        else:
+            base_date = datetime.now(timezone.utc)
         
         if bookmark_value:
             # Incremental sync: 1 new opportunity
@@ -264,6 +297,9 @@ class MockTap:
         """Sync a specific stream."""
         LOGGER.info(f"Syncing stream: {stream_name}")
         
+        # Get records_qty from config, use defaults if not provided
+        records_qty = self.config.get("records_qty")
+        
         # Generate schema
         if stream_name == "customers":
             schema = {
@@ -278,7 +314,9 @@ class MockTap:
                     "metadata": {"type": "object"}
                 }
             }
-            data = self.generate_customer_data(100, state)
+            # Use records_qty if provided, otherwise default to 100
+            count = records_qty if records_qty is not None else 100
+            data = self.generate_customer_data(count, state)
         elif stream_name == "opportunities":
             schema = {
                 "type": "object",
@@ -294,7 +332,9 @@ class MockTap:
                     "metadata": {"type": "object"}
                 }
             }
-            data = self.generate_opportunity_data(50, state)
+            # Use records_qty if provided, otherwise default to 50
+            count = records_qty if records_qty is not None else 50
+            data = self.generate_opportunity_data(count, state)
         else:
             raise ValueError(f"Unknown stream: {stream_name}")
         

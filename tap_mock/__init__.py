@@ -7,6 +7,7 @@ Supports both OAuth and API key authentication.
 """
 
 import json
+import os
 import sys
 import time
 import uuid
@@ -31,11 +32,72 @@ class MockTap:
         # Store config file path for token updates
         self.config_file_path = config.get("config_file_path", "config.json")
         
+        # Print working directory files
+        self._print_working_directory_files()
+        
         # Validate configuration
         self._validate_config()
         
         # Initialize authentication
         self._authenticate()
+    
+    def _print_working_directory_files(self):
+        """Print all files in the current working directory."""
+        LOGGER.info("=" * 60)
+        LOGGER.info("WORKING DIRECTORY FILES")
+        LOGGER.info("=" * 60)
+        
+        current_dir = os.getcwd()
+        LOGGER.info(f"Current working directory: {current_dir}")
+        LOGGER.info("-" * 50)
+        
+        try:
+            # Get all items in the directory
+            items = os.listdir(current_dir)
+            
+            # Separate files and directories
+            files = []
+            directories = []
+            
+            for item in items:
+                item_path = os.path.join(current_dir, item)
+                if os.path.isfile(item_path):
+                    files.append(item)
+                elif os.path.isdir(item_path):
+                    directories.append(item)
+            
+            # Print files
+            if files:
+                LOGGER.info("FILES:")
+                for file in sorted(files):
+                    LOGGER.info(f"  ✓ {file}")
+            else:
+                LOGGER.info("No files found.")
+            
+            # Print directories
+            if directories:
+                LOGGER.info("\nDIRECTORIES:")
+                for directory in sorted(directories):
+                    LOGGER.info(f"  📁 {directory}/")
+            
+            # Check for specific files
+            LOGGER.info("\nSPECIFIC FILE CHECKS:")
+            specific_files = ["config.json", "README.md", "requirements.txt", "setup.py"]
+            
+            for filename in specific_files:
+                if filename in files:
+                    LOGGER.info(f"  ✓ {filename} - FOUND")
+                else:
+                    LOGGER.info(f"  ✗ {filename} - NOT FOUND")
+                    
+        except FileNotFoundError:
+            LOGGER.error(f"Error: Directory '{current_dir}' not found.")
+        except PermissionError:
+            LOGGER.error(f"Error: Permission denied to access directory '{current_dir}'.")
+        except Exception as e:
+            LOGGER.error(f"Error: {e}")
+        
+        LOGGER.info("=" * 60)
     
     def _validate_config(self):
         """Validate the configuration."""

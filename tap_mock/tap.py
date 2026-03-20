@@ -111,7 +111,6 @@ class TapMock(Tap):
             if not next_refresh_token:
                 raise ValueError("rotate_refresh_token is true but next_refresh_token is not provided in config")
 
-            # Update the config file
             self._update_config_file(next_refresh_token)
 
             self.logger.info("Refresh token rotated successfully")
@@ -151,5 +150,16 @@ class TapMock(Tap):
         ]
 
 
-if __name__ == "__main__":
+    def sync_all(self) -> None:
+        try:
+            return super().sync_all()
+        finally:
+            self.copy_json_files_to_sync_output()
+
+
+def main() -> None:
     TapMock.cli()
+
+
+if __name__ == "__main__":
+    main()

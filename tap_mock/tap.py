@@ -150,6 +150,12 @@ class TapMock(Tap):
             OpportunitiesStream(self),
         ]
 
+    def sync_all(self) -> None:
+        try:
+            super().sync_all()
+        finally:
+            self.copy_json_files_to_sync_output()
+
 
 if __name__ == "__main__":
     TapMock.cli()

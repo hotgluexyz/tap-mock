@@ -13,7 +13,7 @@ setup(name='tap-mock',
       ],
       entry_points='''
           [console_scripts]
-          tap-mock=tap_mock.tap:main
+          tap-mock=tap_mock.tap:TapMock.cli
       ''',
       packages=['tap_mock'],
       include_package_data=True,

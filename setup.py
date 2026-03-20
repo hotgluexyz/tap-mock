@@ -8,13 +8,12 @@ setup(name='tap-mock',
       author='Your Name',
       url='https://github.com/yourusername/tap-mock',
       classifiers=['Programming Language :: Python :: 3 :: Only'],
-      py_modules=['tap_mock'],
       install_requires=[
-          'singer-python>=5.0.0',
+          'hotglue-singer-sdk>=1.0.22',
       ],
       entry_points='''
           [console_scripts]
-          tap-mock=tap_mock:main
+          tap-mock=tap_mock.tap:main
       ''',
       packages=['tap_mock'],
       include_package_data=True,

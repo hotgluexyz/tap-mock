@@ -15,6 +15,36 @@ def _get_base_date(config: Dict[str, Any]) -> datetime:
     return base_date
 
 
+def _filter_record(record: Dict[str, Any], selected_filters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """
+    Filter a record based on the selected filters configuration.
+
+    Implements a very simple filter clause for testing purposes.
+    Only one filter clause is supported.
+    """
+    if len(selected_filters) > 1:
+        raise ValueError("Only one filter clause is supported")
+
+    for clause_key, clause_value in selected_filters.items():
+        if not clause_key.startswith("clause_"):
+            raise ValueError(f"Invalid clause key: {clause_key} not supported. The key must start with: clause_")
+        
+        filter_field = clause_value.get("field")
+        filter_operator = clause_value.get("operator")
+        filter_value = clause_value.get("value")
+        
+        if filter_operator == "IN":
+            if record.get(filter_field) not in filter_value:
+                return None
+        elif filter_operator == "EQ":
+            if record.get(filter_field) != filter_value:
+                return None
+        else:
+            raise ValueError(f"Invalid operator: {filter_operator} not supported. Supported operators are: IN, EQ")
+
+    return record
+
+
 class CustomersStream(Stream):
     name = "customers"
     primary_keys = ["id"]
@@ -103,9 +133,19 @@ class CustomersStream(Stream):
 
         return customers
 
+    def post_process(self, row: dict, context: Optional[dict] = None) -> Optional[dict]:
+        """Post-process a record based on the filter configuration."""
+        if self._selected_filters and not _filter_record(row, self._selected_filters):
+            return None
+        return row
+
     def get_records(self, context: Optional[dict]) -> Iterator[Dict[str, Any]]:
         count = self.config.get("records_qty", 100)
-        yield from self.generate_customer_data(count, self.get_starting_timestamp(context))
+        for row in self.generate_customer_data(count, self.get_starting_timestamp(context)):
+            transformed_record = self.post_process(row, context)
+            if transformed_record is None:
+                continue
+            yield transformed_record
 
 
 class OpportunitiesStream(Stream):
@@ -179,6 +219,16 @@ class OpportunitiesStream(Stream):
 
         return opportunities
 
+    def post_process(self, row: dict, context: Optional[dict] = None) -> Optional[dict]:
+        """Post-process a record based on the filter configuration."""
+        if self._selected_filters and not _filter_record(row, self._selected_filters):
+            return None
+        return row
+
     def get_records(self, context: Optional[dict]) -> Iterator[Dict[str, Any]]:
         count = self.config.get("records_qty", 50)
-        yield from self.generate_opportunity_data(count, self.get_starting_timestamp(context))
+        for row in self.generate_opportunity_data(count, self.get_starting_timestamp(context)):
+            transformed_record = self.post_process(row, context)
+            if transformed_record is None:
+                continue
+            yield transformed_record

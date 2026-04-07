@@ -15,7 +15,7 @@ def _get_base_date(config: Dict[str, Any]) -> datetime:
     return base_date
 
 
-def _filter_record(record: Dict[str, Any], selected_filters: Dict[str, Any]) -> Dict[str, Any]:
+def _filter_record(record: Dict[str, Any], selected_filters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """
     Filter a record based on the selected filters configuration.
 

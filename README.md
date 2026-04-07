@@ -77,6 +77,27 @@ Create a single `config.json` file with all attributes at the root level. The ta
 - **`records_qty`**: Number of records to generate per stream on a full sync (optional). Defaults to `100` for customers and `50` for opportunities.
 - **`base_date`**: ISO 8601 datetime used as the reference point for generating record timestamps (optional). Defaults to the current UTC time. Useful for producing deterministic data across test runs.
 
+### Stream Filtering
+
+The tap supports filtering stream data by through a config JSON file
+
+Example
+```json
+// selected-filters.json
+{
+  "filters_version": "1.0.0",
+  "streams": {
+      "customers": {
+          "clause_1_2": {
+              "field": "id",
+              "operator": "IN",
+              "value": ["CUST_000002", "CUST_000003", "CUST_000005"]
+          }
+      }
+  }
+}
+```
+
 ## Usage
 
 ### Discover Streams
@@ -101,6 +122,9 @@ tap-mock --config config.json --state state.json
 
 # Sync with both catalog and state
 tap-mock --config config.json --catalog catalog.json --state state.json
+
+# Sync applying stream data filtering
+tap-mock --config config.json --catalog catalog.json --selected-filters selected-filters.json
 ```
 
 ### Using singer-catalog-select

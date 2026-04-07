@@ -9,7 +9,7 @@ setup(name='tap-mock',
       url='https://github.com/yourusername/tap-mock',
       classifiers=['Programming Language :: Python :: 3 :: Only'],
       install_requires=[
-          'hotglue-singer-sdk>=1.0.22',
+          'hotglue-singer-sdk>=1.0.26',
       ],
       entry_points='''
           [console_scripts]

@@ -61,7 +61,7 @@ Create a single `config.json` file with all attributes at the root level. The ta
 }
 ```
 
-### Configuration Attributes
+### Authentication Parameters
 
 - **`auth_type`**: Either `"oauth"` or `"api_key"` (required)
 - **`client_id`**: OAuth client ID (required for OAuth)
@@ -71,6 +71,11 @@ Create a single `config.json` file with all attributes at the root level. The ta
 - **`next_refresh_token`**: Next refresh token for rotation (required when `rotate_refresh_token` is true)
 - **`access_token`**: OAuth access token (optional for OAuth)
 - **`api_key`**: API key value (required for API key auth)
+
+### Behavior Parameters
+
+- **`records_qty`**: Number of records to generate per stream on a full sync (optional). Defaults to `100` for customers and `50` for opportunities.
+- **`base_date`**: ISO 8601 datetime used as the reference point for generating record timestamps (optional). Defaults to the current UTC time. Useful for producing deterministic data across test runs.
 
 ## Usage
 

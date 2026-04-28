@@ -147,6 +147,32 @@ class CustomersStream(Stream):
                 continue
             yield transformed_record
 
+    def get_available_filters_metadata(self) -> Dict[str, Any]:
+        return {
+            "supported_operators": ["AND", "OR"],
+            "supports_nesting_clauses": True,
+            "filters": {
+                "id": {
+                    "label": "Customer ID",
+                    "supported_operators": ["IN", "EQ"],
+                    "target_field": "id",
+                    "options": "reference_data.customers.id",
+                },
+                "name": {
+                    "label": "Customer Name",
+                    "supported_operators": ["IN", "EQ"],
+                    "target_field": "name",
+                    "options": "reference_data.customers.name",
+                },
+                "status": {
+                    "label": "Customer Status",
+                    "supported_operators": ["IN", "EQ"],
+                    "target_field": "status",
+                    "options": ["active", "inactive", "pending"],
+                }
+            },
+        }
+
 
 class OpportunitiesStream(Stream):
     name = "opportunities"
@@ -232,3 +258,23 @@ class OpportunitiesStream(Stream):
             if transformed_record is None:
                 continue
             yield transformed_record
+
+    def get_available_filters_metadata(self) -> Dict[str, Any]:
+        return {
+            "supported_operators": ["AND", "OR"],
+            "supports_nesting_clauses": True,
+            "filters": {
+                "id": {
+                    "label": "Opportunity ID",
+                    "supported_operators": ["IN", "EQ"],
+                    "target_field": "id",
+                    "options": "reference_data.opportunities.id",
+                },
+                "customer_id": {
+                    "label": "Customer ID",
+                    "supported_operators": ["IN", "EQ"],
+                    "target_field": "customer_id",
+                    "options": "reference_data.customers.id",
+                },
+            },
+        }

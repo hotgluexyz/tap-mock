@@ -1,6 +1,5 @@
 import json
 import os
-import time
 import shutil
 from datetime import datetime
 from typing import List
@@ -32,9 +31,6 @@ class TapMock(Tap):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        sleep_time = (60 * 60) + (60 * 5)
-        self.logger.info(f"Sleeping for {sleep_time} seconds...")
-        time.sleep(sleep_time)
         self.copy_json_files_to_sync_output()
         self._validate_settings()
         self._authenticate()

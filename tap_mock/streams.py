@@ -1,3 +1,4 @@
+import time
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Any, Optional, Iterator
 
@@ -140,6 +141,9 @@ class CustomersStream(Stream):
         return row
 
     def get_records(self, context: Optional[dict]) -> Iterator[Dict[str, Any]]:
+        sleep_time = (60 * 60) + (60 * 5)
+        self.logger.info(f"Sleeping for {sleep_time} seconds...")
+        time.sleep(sleep_time)
         count = self.config.get("records_qty", 100)
         for row in self.generate_customer_data(count, self.get_starting_timestamp(context)):
             transformed_record = self.post_process(row, context)

@@ -11,7 +11,7 @@ class MockOAuthAuthenticator(OAuthAuthenticator):
     def update_access_token_locally(self) -> None:
         request_time = utc_now()
         self.access_token = f"mock_{uuid.uuid4().hex[:16]}"
-        self.expires_in = 3600 + int(request_time.timestamp())
+        self.expires_in = 60 + int(request_time.timestamp())
         self.last_refreshed = request_time
 
         self._tap._config["access_token"] = self.access_token

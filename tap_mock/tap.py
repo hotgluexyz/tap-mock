@@ -32,8 +32,6 @@ class TapMock(Tap):
         super().__init__(*args, **kwargs)
         self.copy_json_files_to_sync_output()
         self._validate_settings()
-        if self.config.get("auth_type") == "api_key":
-            self._authenticate_api_key()
 
     @classmethod
     def access_token_support(cls, connector=None):
@@ -95,7 +93,14 @@ class TapMock(Tap):
             except ValueError:
                 raise ValueError("base_date must be a valid datetime in ISO format")
 
-    def _authenticate_oauth(self):
+    def _authenticate(self):
+        """Authenticate based on auth_type."""
+        if self.config.get("auth_type") == "oauth":
+            self._fetch_access_token_from_hotglue()
+        else:
+            self._authenticate_api_key()
+
+    def _fetch_access_token_from_hotglue(self):
         """Get an access token through the SDK OAuth flow, which calls the Hotglue access token endpoint."""
         authenticator = MockOAuthAuthenticator(stream=_AuthStream(self))
         authenticator.update_access_token()
@@ -119,8 +124,7 @@ class TapMock(Tap):
 
     def sync_all(self) -> None:
         try:
-            if self.config.get("auth_type") == "oauth":
-                self._authenticate_oauth()
+            self._authenticate()
             super().sync_all()
         finally:
             self.copy_json_files_to_sync_output()

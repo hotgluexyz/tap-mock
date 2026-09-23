@@ -1,4 +1,3 @@
-import json
 import os
 import shutil
 from datetime import datetime
@@ -6,6 +5,7 @@ from typing import List
 
 from hotglue_singer_sdk import Tap, Stream, typing as th
 
+from tap_mock.auth import MockOAuthAuthenticator
 from tap_mock.streams import CustomersStream, OpportunitiesStream
 
 JOB_ID = os.getenv("JOB_ID")
@@ -22,7 +22,6 @@ class TapMock(Tap):
         th.Property("client_id", th.StringType()),
         th.Property("client_secret", th.StringType()),
         th.Property("refresh_token", th.StringType()),
-        th.Property("next_refresh_token", th.StringType()),
         th.Property("rotate_refresh_token", th.BooleanType()),
         th.Property("api_key", th.StringType()),
         th.Property("records_qty", th.IntegerType()),
@@ -33,7 +32,10 @@ class TapMock(Tap):
         super().__init__(*args, **kwargs)
         self.copy_json_files_to_sync_output()
         self._validate_settings()
-        self._authenticate()
+
+    @classmethod
+    def access_token_support(cls, connector=None):
+        return MockOAuthAuthenticator, "https://mock.invalid/oauth/token"
 
     def copy_json_files_to_sync_output(self):
         """Copy all JSON files from current working directory to SYNC_OUTPUT_PATH."""
@@ -92,47 +94,17 @@ class TapMock(Tap):
                 raise ValueError("base_date must be a valid datetime in ISO format")
 
     def _authenticate(self):
-        """Simulate authentication based on auth_type."""
+        """Authenticate based on auth_type."""
         if self.config.get("auth_type") == "oauth":
-            self._authenticate_oauth()
+            self._fetch_access_token_from_hotglue()
         else:
             self._authenticate_api_key()
 
-    def _authenticate_oauth(self):
-        """Simulate OAuth authentication."""
-        self.logger.info("Authenticating with OAuth...")
-
-        # Simulate token refresh if enabled
-        if self.config.get("rotate_refresh_token", False):
-            self.logger.info("Rotating refresh token...")
-
-            # Check if next_refresh_token exists
-            next_refresh_token = self.config.get("next_refresh_token")
-            if not next_refresh_token:
-                raise ValueError("rotate_refresh_token is true but next_refresh_token is not provided in config")
-
-            # Update the config file
-            self._update_config_file(next_refresh_token)
-
-            self.logger.info("Refresh token rotated successfully")
-            self.logger.info(f"New refresh token: {next_refresh_token}")
-
-        self.logger.info("OAuth authentication successful")
-
-    def _update_config_file(self, new_refresh_token: str):
-        """Update the config file with new refresh token."""
-        if not self.config_file:
-            return
-
-        with open(self.config_file, 'r') as f:
-            config_data = json.load(f)
-
-        config_data["refresh_token"] = new_refresh_token
-
-        with open(self.config_file, 'w') as f:
-            json.dump(config_data, f, indent=2)
-
-        self.logger.info(f"Updated config file: {self.config_file}")
+    def _fetch_access_token_from_hotglue(self):
+        """Get an access token through the SDK OAuth flow, which calls the Hotglue access token endpoint."""
+        authenticator = MockOAuthAuthenticator(stream=_AuthStream(self))
+        authenticator.update_access_token()
+        self.logger.info(f"Fetched access token: {authenticator.access_token}")
 
     def _authenticate_api_key(self):
         """Simulate API key authentication."""
@@ -152,9 +124,20 @@ class TapMock(Tap):
 
     def sync_all(self) -> None:
         try:
+            self._authenticate()
             super().sync_all()
         finally:
             self.copy_json_files_to_sync_output()
+
+
+class _AuthStream:
+    """Stand-in for a stream, which the authenticator needs."""
+
+    def __init__(self, tap: Tap):
+        self._tap = tap
+        self.tap_name = tap.name
+        self.config = tap.config
+        self.logger = tap.logger
 
 
 if __name__ == "__main__":
